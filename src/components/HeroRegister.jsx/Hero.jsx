@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendPasswordResetEmail ,sendEmailVerification, updateProfile } from 'firebase/auth';
 import auth from '../../Firebase/firebase.config';
 import { AiFillEyeInvisible , AiFillEye } from 'react-icons/ai';
 import { Link } from 'react-router-dom';
+import { useRef } from 'react';
+import Swal from 'sweetalert2'
 
 
 export default function Hero() {
@@ -11,12 +13,15 @@ export default function Hero() {
   const [ success , setSuccess ] = useState('');
   const [ visible , setVisible ] = useState(false);
   const [ acceptTerms , setAcceptTerms ] = useState(false);
+  const emailRef = useRef(null);
 
 
     const handleRegister = (e) => {
         e.preventDefault();
         const email = e.target.email.value;
         const password = e.target.password.value;
+        const name = e.target.name.value;
+        const photo = e.target.photo.value;
 
       setRegisterError('');
       setSuccess('');
@@ -27,8 +32,39 @@ export default function Hero() {
 
 
         createUserWithEmailAndPassword(auth, email, password)
-        .then(result => setSuccess('Your Account Successfully Created!'))
+        .then(result => {
+
+          updateProfile(result.user , {displayName: name, photoURL: photo})
+          .then(()=> console.log('User Name and Photo URL Updated'))
+          .catch(error => console.log(error.message))
+
+          if(!result.user.emailVerified){
+
+            sendEmailVerification(result.user)
+            .then(()=> {
+              Swal.fire({
+                title: 'Please Verify Your Email',
+                text: 'Your Account Successfully Created!',
+                icon: 'success',
+                confirmButtonText: 'Ok'
+              })
+            })    
+          }
+        })
         .catch(error => setRegisterError(error.message))
+    }
+
+    const handleForgetPassword = () => {
+      const email =  emailRef.current.value;
+
+     if(!/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email)){
+      return alert('please enter valid email')
+     }
+     
+     sendPasswordResetEmail(auth, email)
+     .then(result => {alert('Please check your email'); console.log(result?.user)})
+     .catch(error => console.log(error.message))
+
     }
 
   return (
@@ -42,11 +78,26 @@ export default function Hero() {
       <div className="card-body">
 
        <form onSubmit={handleRegister}>
+
+       <div className="form-control">
+          <label className="label">
+            <span className="label-text"> Name </span>
+          </label>
+          <input type="text" placeholder="Enter Your Name " className="input input-bordered" name='name' required/>
+        </div>
+
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text"> Photo URL </span>
+          </label>
+          <input type="text" placeholder="Enter Photo URL " className="input input-bordered" name='photo' required/>
+        </div>
+
        <div className="form-control">
           <label className="label">
             <span className="label-text">Email</span>
           </label>
-          <input type="email" placeholder="email" className="input input-bordered" name='email' required/>
+          <input type="email" ref={emailRef} placeholder="email" className="input input-bordered" name='email' required/>
         </div>
         <div className="form-control">
           <label className="label">
@@ -64,7 +115,7 @@ export default function Hero() {
        </div>
 
           <label className="label">
-            <a href="#" className="label-text-alt link link-hover"> Forgot password?</a>
+            <a href="#" className="label-text-alt link link-hover" onClick={handleForgetPassword}> Forgot password?</a>
           </label>
 
 
@@ -77,7 +128,7 @@ export default function Hero() {
 
         </div>
         <div className="form-control mt-6">
-          <button className="btn btn-primary" disabled={acceptTerms? "" : "true"} >Login</button>
+          <button className="btn btn-primary" disabled={acceptTerms? "" : "true"} > Register </button>
         </div>
        </form>
       {registerError && <p className='text-red-600 font-semibold'> {registerError} </p>}

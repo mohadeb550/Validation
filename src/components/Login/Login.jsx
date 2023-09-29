@@ -19,6 +19,7 @@ export default function Login() {
         icon: 'success',
         confirmButtonText: 'Cool'
       })
+      console.log(result.user)
     })
     .catch(error =>{
       Swal.fire({
@@ -103,7 +104,7 @@ export default function Login() {
         type="submit"
         data-ripple-light="true"
       >
-        Sign In
+        Login
       </button>
       <p className="mt-6 flex justify-center font-sans text-sm font-light leading-normal text-inherit antialiased">
         Don't have an account?
