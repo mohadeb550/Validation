@@ -1,11 +1,17 @@
 import React, { useState } from 'react'
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import auth from '../../Firebase/firebase.config';
+import { AiFillEyeInvisible , AiFillEye } from 'react-icons/ai';
+import { Link } from 'react-router-dom';
+
 
 export default function Hero() {
 
   const [ registerError , setRegisterError ] = useState('');
   const [ success , setSuccess ] = useState('');
+  const [ visible , setVisible ] = useState(false);
+  const [ acceptTerms , setAcceptTerms ] = useState(false);
+
 
     const handleRegister = (e) => {
         e.preventDefault();
@@ -15,10 +21,8 @@ export default function Hero() {
       setRegisterError('');
       setSuccess('');
 
-
-      if(password.length < 6){
-        setRegisterError('Password Should be at least 6 character');
-        return;
+      if(!/^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{6,16}$/.test(password)){
+       return setRegisterError('Password is Not Valid');
       }
 
 
@@ -48,13 +52,32 @@ export default function Hero() {
           <label className="label">
             <span className="label-text">Password</span>
           </label>
-          <input type="password" placeholder="password" className="input input-bordered" name='password' required />
+
+       <div className='relative'>
+
+       <input type={visible? 'text': 'password'} placeholder="password" className="input input-bordered w-full" name='password' required />
+
+     <div className='absolute right-3 bottom-4 cursor-pointer' onClick={()=> setVisible(!visible)}>
+     {visible? <AiFillEyeInvisible /> : <AiFillEye /> }
+     </div>
+
+       </div>
+
           <label className="label">
             <a href="#" className="label-text-alt link link-hover"> Forgot password?</a>
           </label>
+
+
+          <div className='flex items-center gap-1 my-2'>
+        <input type='checkbox' name='terms' onChange={()=> setAcceptTerms(!acceptTerms)}/>
+        <label className='text-xs text-blue-600 '> Please Accept Out Terms & Condition!</label>
+       </div>
+
+        <p className='text-sm '> Already Have an account? Please <Link to='/login' className='text-blue-600 font-semibold'> Login</Link> </p>
+
         </div>
         <div className="form-control mt-6">
-          <button className="btn btn-primary">Login</button>
+          <button className="btn btn-primary" disabled={acceptTerms? "" : "true"} >Login</button>
         </div>
        </form>
       {registerError && <p className='text-red-600 font-semibold'> {registerError} </p>}
